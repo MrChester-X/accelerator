@@ -32,7 +32,7 @@ class SM:
 			self.compiler.DetectAll(AMBuild)
 
 			#Detect variables
-			envvars = { 'SOURCEMOD': 'sourcemod-1.8' }
+			envvars = { 'SOURCEMOD': 'sourcemod' }
 
 			# Finds if a dict with `key` set to `value` is present on the dict of dicts `dictionary`
 			def findDictByKey(dictionary, key, value):
@@ -57,7 +57,7 @@ class SM:
 						oldhead = head
 						head, tail = os.path.split(head)
 					if head == None or head == oldhead:
-						raise Exception('Could not find a valid path for {0}'.format(i))
+						raise Exception(f"Could not find a valid path for {i}. Head = {head}")
 				AMBuild.cache.CacheVariable(i, path)
 
 			#Set up defines
