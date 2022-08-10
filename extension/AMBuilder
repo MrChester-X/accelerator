@@ -16,6 +16,8 @@ def BuildEverything():
 	compiler['CXXINCLUDES'].append(os.path.join(AMBuild.cache['SOURCEMOD'], 'public'))
 	compiler['CXXINCLUDES'].append(os.path.join(AMBuild.cache['SOURCEMOD'], 'public', 'extensions'))
 	compiler['CXXINCLUDES'].append(os.path.join(AMBuild.cache['SOURCEMOD'], 'sourcepawn', 'include'))
+	compiler['CXXINCLUDES'].append(os.path.join(AMBuild.cache['SOURCEMOD'], 'public', 'amtl', 'amtl'))
+	compiler['CXXINCLUDES'].append(os.path.join(AMBuild.cache['SOURCEMOD'], 'public', 'amtl'))
 
 	if AMBuild.target['platform'] in ['linux']:
 		compiler['POSTLINKFLAGS'].append('-lm')
