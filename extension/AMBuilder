@@ -25,7 +25,7 @@ def BuildEverything():
 		compiler['POSTLINKFLAGS'].append('-pthread')
 
 		compiler['CDEFINES'].append('HAVE_CONFIG_H')
-		compiler['CXXINCLUDES'].append(os.path.join(AMBuild.sourceFolder, 'breakpad', 'build', 'src'))
+		compiler['CXXINCLUDES'].append(os.path.join(AMBuild.sourceFolder, 'breakpad', 'src', 'src'))
 
 	compiler['CXXINCLUDES'].append(os.path.join(AMBuild.sourceFolder, 'breakpad', 'src', 'src'))
 
@@ -62,9 +62,9 @@ def BuildEverything():
 
 	if AMBuild.target['platform'] in ['linux']:
 		libs = [
-			('libbreakpad_client.a', os.path.join('breakpad', 'build', 'src', 'client', 'linux', 'libbreakpad_client.a')),
-			('libbreakpad.a', os.path.join('breakpad', 'build', 'src', 'libbreakpad.a')),
-			('libdisasm.a', os.path.join('breakpad', 'build', 'src', 'third_party', 'libdisasm', 'libdisasm.a')),
+			('libbreakpad_client.a', os.path.join('breakpad', 'src', 'src', 'client', 'linux', 'libbreakpad_client.a')),
+			('libbreakpad.a', os.path.join('breakpad', 'src', 'src', 'libbreakpad.a')),
+			('libdisasm.a', os.path.join('breakpad', 'src', 'src', 'third_party', 'libdisasm', 'libdisasm.a')),
 		]
 
 		for lib, target in libs:
