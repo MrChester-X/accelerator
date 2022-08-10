@@ -61,9 +61,11 @@ public:
 };
 
 // Taken from https://hg.mozilla.org/mozilla-central/file/3eb7623b5e63b37823d5e9c562d56e586604c823/build/unix/stdc%2B%2Bcompat/stdc%2B%2Bcompat.cpp
-extern "C" void __attribute__((weak)) __cxa_throw_bad_array_new_length() {
-	abort();
-}
+
+// TODO: Исправить
+// extern "C" void __attribute__((weak)) __cxa_throw_bad_array_new_length() {
+// 	abort();
+// }
 
 namespace std {
 	/* We shouldn't be throwing exceptions at all, but it sadly turns out
@@ -137,6 +139,8 @@ char logPath[512];
 
 google_breakpad::ExceptionHandler *handler = NULL;
 
+IForward* g_pOnServerCrash = nullptr;
+
 #if defined _LINUX
 void terminateHandler()
 {
@@ -170,6 +174,11 @@ const int kNumHandledSignals = sizeof(kExceptionSignals) / sizeof(kExceptionSign
 static bool dumpCallback(const google_breakpad::MinidumpDescriptor& descriptor, void* context, bool succeeded)
 {
 	//printf("Wrote minidump to: %s\n", descriptor.path());
+
+	if (g_pOnServerCrash->GetFunctionCount() > 0)
+	{
+		g_pOnServerCrash->Execute(nullptr);
+	}
 
 	if (succeeded) {
 		sys_write(STDOUT_FILENO, "Wrote minidump to: ", 19);
@@ -312,6 +321,11 @@ static bool dumpCallback(const wchar_t* dump_path,
                          MDRawAssertionInfo* assertion,
                          bool succeeded)
 {
+	if (g_pOnServerCrash->GetFunctionCount() > 0)
+	{
+		g_pOnServerCrash->Execute(nullptr);
+	}
+	
 	if (!succeeded) {
 		printf("Failed to write minidump to: %ls\\%ls.dmp\n", dump_path, minidump_id);
 		return succeeded;
@@ -562,6 +576,22 @@ class UploadThread: public IThread
 		{
 			StderrInhibitor stdrrInhibitor;
 
+			if (!WriteSymbolFile(debugFile, debugFile, "Linux", debug_dirs, options, outputStream)) {
+				outputStream.str("");
+				outputStream.clear();
+
+				// Try again without debug dirs.
+				if (!WriteSymbolFile(debugFile, debugFile, "Linux", {}, options, outputStream)) {
+					if (log) fprintf(log, "Failed to process symbol file\n");
+					return false;
+				}
+			}
+
+			/*
+			К величайшему сожалению, функция WriteSymbolFile изменила свою сигнатуру
+			Поэтому пришлось немного поебаться
+			27/07/22
+
 			if (!WriteSymbolFile(debugFile, debug_dirs, options, outputStream)) {
 				outputStream.str("");
 				outputStream.clear();
@@ -572,6 +602,7 @@ class UploadThread: public IThread
 					return false;
 				}
 			}
+			*/
 		}
 
 		auto output = outputStream.str();
@@ -1222,7 +1253,7 @@ bool Accelerator::SDK_OnLoad(char *error, size_t maxlength, bool late)
 			break;
 		}
 
-		strncpy(crashSourceModVersion, spEngine2->GetVersionString(), sizeof(crashSourceModVersion));
+		// strncpy(crashSourceModVersion, spEngine2->GetVersionString(), sizeof(crashSourceModVersion));
 	} while(false);
 
 	plsys->AddPluginsListener(this);
@@ -1299,11 +1330,17 @@ bool Accelerator::SDK_OnLoad(char *error, size_t maxlength, bool late)
 		this->OnCoreMapStart(NULL, 0, 0);
 	}
 
+	g_pOnServerCrash = forwards->CreateForward("OnServerCrash", ET_Ignore, 0, nullptr);
+
+	sharesys->RegisterLibrary(myself, "accelerator");
+
 	return true;
 }
 
 void Accelerator::SDK_OnUnload()
 {
+	forwards->ReleaseForward(g_pOnServerCrash);
+	
 	plsys->RemovePluginsListener(this);
 
 #if defined _LINUX
